@@ -67,7 +67,7 @@ app_license = "mit"
 # Installation
 # ------------
 
-# before_install = "sowaanerp_subscription.install.before_install"
+before_install = "sowaanerp_subscription.install.before_install"
 # after_install = "sowaanerp_subscription.install.after_install"
 
 # Uninstallation
@@ -118,17 +118,25 @@ app_license = "mit"
 # 	"ToDo": "custom_app.overrides.CustomToDo"
 # }
 
-# Document Events
-# ---------------
-# Hook on document methods and events
+on_login = 'sowaanerp_subscription.events.auth.successful_login'
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+    'User': {
+        'validate': 'sowaanerp_subscription.sowaanerp_subscription.quota.user_limit',
+        'on_update': 'sowaanerp_subscription.sowaanerp_subscription.quota.user_limit'
+    },
+    'Company': {
+        'validate': 'sowaanerp_subscription.sowaanerp_subscription.quota.company_limit',
+        'on_update': 'sowaanerp_subscription.sowaanerp_subscription.quota.company_limit'
+    },
+    '*': {
+        'on_submit': 'sowaanerp_subscription.sowaanerp_subscription.quota.db_space_limit',
+        'before_insert': 'sowaanerp_subscription.sowaanerp_subscription.quota.document_limit'
+    },
+    'File': {
+        'validate': 'sowaanerp_subscription.sowaanerp_subscription.quota.files_space_limit'
+    }
+}
 
 # Scheduled Tasks
 # ---------------
