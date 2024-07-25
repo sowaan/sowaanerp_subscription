@@ -34,19 +34,19 @@ def validate_users(self, count_administrator_user, count_website_users, count_so
         frappe.throw(_("Invalid value for maximum User Allowed limit. it can be a whole number only."), frappe.ValidationError)
 
     # Fetching all active users list
-    filters = {
-        'enabled': 1,
-        "name": ['!=', 'Guest']
-    }
+    filters = [
+        ["User","enabled","=",1],
+        ["User","name","!=","Guest"]
+    ]
 
     # if we don't have to count administrator also
     if count_administrator_user == 0:
-        filters['name'] = ['not in', ['Guest', 'Administrator']]
+        filters.append(["User","name","!=","Administrator"])
     
     # if we don't have to count sowaan users also
     if count_sowaan_user == 0:
-        filters['email'] = ['not like', '%@sowaan.com%']
-        filters['email'] = ['not like', '%@ahwaal.com%']
+        filters.append(["User","email","not like","%@sowaan.com%"])
+        filters.append(["User","email","not like","%@ahwaal.com%"])
 
     user_list = frappe.get_all('User', filters, ["name"])
     active_users = len(user_list)
