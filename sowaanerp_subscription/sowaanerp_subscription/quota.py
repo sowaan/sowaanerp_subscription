@@ -44,7 +44,7 @@ def validate_users(self, count_administrator_user, count_website_users, count_so
         filters['name'] = ['not in', ['Guest', 'Administrator']]
     
     # if we don't have to count sowaan users also
-    if count_administrator_user == 0:
+    if count_sowaan_user == 0:
         filters['email'] = ['not like', '%@sowaan.com%']
         filters['email'] = ['not like', '%@ahwaal.com%']
 
