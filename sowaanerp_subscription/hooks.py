@@ -141,6 +141,13 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
+
+scheduler_events = {
+    "daily": [
+        "sowaanerp_subscription.tasks.daily"
+    ]
+}
+
 # scheduler_events = {
 # 	"all": [
 # 		"sowaanerp_subscription.tasks.all"

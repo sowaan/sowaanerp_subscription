@@ -37,7 +37,7 @@ def before_install():
         'count_website_users': 0,
         'count_administrator_user': 0,
         'count_sowaan_user': 0,
-        'valid_till': add_days(today(), 14),
+        'valid_till': add_days(today(), 365),
         'document_limit': {
             'Sales Invoice': {'limit': 10, 'period': 'Daily'},
             'Purchase Invoice': {'limit': 10, 'period': 'Weekly'},
