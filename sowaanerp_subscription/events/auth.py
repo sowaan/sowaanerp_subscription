@@ -11,4 +11,4 @@ def successful_login(login_manager):
     valid_till = quota['valid_till']
     diff = date_diff(valid_till, today())
     if diff < 0:
-        frappe.throw(_("You subscription is expired. Please contact sales"), frappe.AuthenticationError)
+        frappe.throw(_("Your subscription is expired. Please contact sales"), frappe.AuthenticationError)
