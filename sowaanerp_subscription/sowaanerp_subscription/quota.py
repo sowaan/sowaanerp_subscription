@@ -65,7 +65,7 @@ def validate_users(self, count_administrator_user, count_website_users, count_so
                 break
 
     # Users limit validation
-    if allowed_users != 0 and active_users >= allowed_users:
+    if allowed_users != 0 and active_users >= allowed_users and ("sowaan.com" not in self.email):
         if not frappe.get_all('User', filters={'name': self.name}):
             frappe.throw('Only {} active {} users allowed and you have {} active users. Please disable users or to increase the limit please contact sales'. format(allowed_users, is_desk, active_users))
 
