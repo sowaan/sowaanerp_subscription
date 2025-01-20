@@ -11,11 +11,11 @@ app_license = "mit"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/sowaanerp_subscription/css/sowaanerp_subscription.css"
-# app_include_js = "/assets/sowaanerp_subscription/js/sowaanerp_subscription.js"
+app_include_js = "/assets/sowaanerp_subscription/js/sowaanerp_subscription.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/sowaanerp_subscription/css/sowaanerp_subscription.css"
-# web_include_js = "/assets/sowaanerp_subscription/js/sowaanerp_subscription.js"
+web_include_js = "/assets/sowaanerp_subscription/js/check_subscription.js"
 
 # include custom scss in every website theme (without file extension ".scss")
 # website_theme_scss = "sowaanerp_subscription/public/scss/website"
@@ -27,11 +27,14 @@ app_license = "mit"
 # include js in page
 # page_js = {"page" : "public/js/file.js"}
 
+
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
+
+boot_session = "sowaanerp_subscription.boot_session.boot_session"
 
 # Svg Icons
 # ------------------
@@ -117,6 +120,8 @@ before_install = "sowaanerp_subscription.install.before_install"
 # override_doctype_class = {
 # 	"ToDo": "custom_app.overrides.CustomToDo"
 # }
+
+on_request = "sowaanerp_subscription.middleware.check_subscription_middleware"
 
 on_login = 'sowaanerp_subscription.events.auth.successful_login'
 
