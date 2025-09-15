@@ -4,6 +4,7 @@ import frappe
 from frappe import _
 from frappe.installer import update_site_config
 from frappe.utils import get_first_day, get_first_day_of_week, getdate
+from sowaanerp_subscription.install import before_install
 
 
 # User
@@ -200,7 +201,11 @@ def document_limit(doc, event):
     """
     We check for the doctype in document_limit and compute accordingly.
     """
-    limit_dict = frappe.get_site_config()['quota']['document_limit']
+    site_config = frappe.get_site_config()
+    if not site_config.get("quota"):
+        before_install()
+
+    limit_dict = site_config['quota']['document_limit']
     if (limit_dict.get(doc.doctype)):
         limit = frappe._dict(limit_dict.get(doc.doctype))
         limit_period = get_limit_period(limit.period)
