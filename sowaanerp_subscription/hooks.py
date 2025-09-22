@@ -136,7 +136,7 @@ doc_events = {
     },
     '*': {
         'on_submit': 'sowaanerp_subscription.sowaanerp_subscription.quota.db_space_limit',
-        'before_insert': 'sowaanerp_subscription.sowaanerp_subscription.quota.document_limit'
+        # 'before_insert': 'sowaanerp_subscription.sowaanerp_subscription.quota.document_limit'
     },
     'File': {
         'validate': 'sowaanerp_subscription.sowaanerp_subscription.quota.files_space_limit'
