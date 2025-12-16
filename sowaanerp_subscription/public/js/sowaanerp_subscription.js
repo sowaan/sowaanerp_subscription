@@ -60,12 +60,19 @@ let $floatingBar = $(`
 `);
 
 $(document).ready(function () {
-	if (frappe.boot.setup_complete === 1) {
+	// console.log('Trial end days:', trial_end_days);
+	// console.log("frappe.is_mobile():", frappe.is_mobile());
+	// console.log("frappe.boot.setup_complete:", frappe.boot.setup_complete);
+
+	const setupComplete = frappe.boot?.setup_complete;
+
+	if (setupComplete === 1 || setupComplete === true || setupComplete === "1") {
 		if (
 			!frappe.is_mobile() &&
 			trial_end_days > 0 &&
             trial_end_days <= 30
 		) {
+			// console.log('Displaying subscription renewal notification bar.');
 			$('.layout-main-section').before($floatingBar);
 
 			$floatingBar.find('.dismiss-upgrade').on('click', () => {
