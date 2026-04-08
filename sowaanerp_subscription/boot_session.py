@@ -7,3 +7,4 @@ def boot_session(bootinfo):
 
     # Add the custom value to the boot info
     bootinfo.quota = site_config.get("quota", None)
+    bootinfo.restricted_doctypes = site_config.get("restricted_doctypes", [])

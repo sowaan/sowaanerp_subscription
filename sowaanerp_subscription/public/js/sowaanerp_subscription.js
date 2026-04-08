@@ -1,4 +1,15 @@
 const frappe_cloud_base_endpoint = 'https://frappecloud.com';
+const restrictedDoctypes = (frappe.boot && frappe.boot.restricted_doctypes) || [];
+
+frappe.ui.form.on('*', {
+	refresh(frm) {
+		if (restrictedDoctypes.includes(frm.doctype)) {
+			frm.disable_save();
+		} else {
+			frm.enable_save();
+		}
+	},
+});
 
 function calculate_trial_end_days() {
 	// try to check for trial_end_date in frappe.boot.subscription_conf

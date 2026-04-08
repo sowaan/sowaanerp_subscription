@@ -71,6 +71,7 @@ boot_session = "sowaanerp_subscription.boot_session.boot_session"
 # ------------
 
 before_install = "sowaanerp_subscription.install.before_install"
+after_migrate = "sowaanerp_subscription.install.after_migrate"
 # after_install = "sowaanerp_subscription.install.after_install"
 
 # Uninstallation
@@ -135,6 +136,7 @@ doc_events = {
         'on_update': 'sowaanerp_subscription.sowaanerp_subscription.quota.company_limit'
     },
     '*': {
+        'validate': 'sowaanerp_subscription.utils.check_doctype_restriction',
         'on_submit': 'sowaanerp_subscription.sowaanerp_subscription.quota.db_space_limit',
         # 'before_insert': 'sowaanerp_subscription.sowaanerp_subscription.quota.document_limit'
     },

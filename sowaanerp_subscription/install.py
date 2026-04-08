@@ -3,6 +3,25 @@ from frappe.installer import update_site_config
 from frappe.utils.data import add_days, today
 
 
+DEFAULT_RESTRICTED_DOCTYPES = [
+    "Client Script",
+    "Server Script",
+    "Print Format",
+    "Custom Field",
+    "DocType",
+]
+
+
+def ensure_restricted_doctypes_config():
+    site_config = frappe.get_site_config()
+    if "restricted_doctypes" not in site_config:
+        update_site_config("restricted_doctypes", DEFAULT_RESTRICTED_DOCTYPES)
+
+
+def after_migrate():
+    ensure_restricted_doctypes_config()
+
+
 def before_install():
     filters = {
         'enabled': 1,
@@ -48,3 +67,4 @@ def before_install():
 
     # Updating site config
     update_site_config('quota', data)
+    ensure_restricted_doctypes_config()
