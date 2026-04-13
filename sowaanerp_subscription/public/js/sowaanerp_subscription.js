@@ -1,5 +1,5 @@
 const frappe_cloud_base_endpoint = 'https://frappecloud.com';
-const restrictedDoctypes = (frappe.boot && frappe.boot.restricted_doctypes) || [];
+const restrictedDoctypes = (frappe.boot && frappe.boot.quota && frappe.boot.quota.restricted_doctypes) || [];
 
 frappe.ui.form.on('*', {
 	refresh(frm) {

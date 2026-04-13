@@ -14,9 +14,11 @@ DEFAULT_RESTRICTED_DOCTYPES = [
 
 def ensure_restricted_doctypes_config():
     site_config = frappe.get_site_config()
-    if "restricted_doctypes" in site_config:
+    quota = site_config.get("quota") or {}
+    if "restricted_doctypes" in quota:
         return
-    update_site_config("restricted_doctypes", DEFAULT_RESTRICTED_DOCTYPES)
+    quota["restricted_doctypes"] = DEFAULT_RESTRICTED_DOCTYPES
+    update_site_config("quota", quota)
 
 
 def after_migrate():
