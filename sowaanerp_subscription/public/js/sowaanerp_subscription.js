@@ -1,16 +1,62 @@
 const frappe_cloud_base_endpoint = 'https://frappecloud.com';
 const restrictedDoctypes = (frappe.boot && frappe.boot.quota && frappe.boot.quota.restricted_doctypes) || [];
 
-frappe.ui.form.on('*', {
-	refresh(frm) {
-		if (restrictedDoctypes.includes(frm.doctype)) {
-			frm.disable_save();
-		} else {
-			frm.enable_save();
-		}
-	},
-});
+// Monkey-patch Form.prototype.refresh to apply restriction UI on every form render
+(function () {
 
+	const _originalRefresh = frappe.ui.form.Form.prototype.refresh;
+	frappe.ui.form.Form.prototype.refresh = function (...args) {
+		const result = _originalRefresh.apply(this, args);
+		applyDoctypeRestrictionUI(this);
+		// Delayed re-apply to catch buttons added by other scripts
+		setTimeout(() => applyDoctypeRestrictionUI(this), 300);
+		setTimeout(() => applyDoctypeRestrictionUI(this), 1000);
+		return result;
+	};
+})();
+
+function applyDoctypeRestrictionUI(frm) {
+	if (!restrictedDoctypes.includes(frm.doctype)) {
+		return;
+	}
+
+	// Disable save
+	frm.disable_save();
+
+	// Clear primary action (Save/Submit/Amend button)
+	if (frm.page && frm.page.clear_primary_action) {
+		frm.page.clear_primary_action();
+	}
+
+	// Override set_primary_action to prevent Save button from being re-added by toolbar refresh
+	if (frm.page && !frm.page.__restriction_applied) {
+		frm.page.__restriction_applied = true;
+		frm.page.set_primary_action = function () { return; };
+	}
+
+	if (frm.page && frm.page.wrapper) {
+		// Hide primary and secondary action buttons (Save, Submit, etc.)
+		frm.page.wrapper.find('.primary-action, .btn-primary-dark, .btn-primary, .btn-secondary').hide();
+
+		// Hide all custom action buttons (e.g., "Go to Customer", "Add script for Child Table", etc.)
+		frm.page.wrapper.find('.custom-actions .btn, .custom-btn-group .btn').hide();
+		frm.page.wrapper.find('.custom-actions').hide();
+
+		// Hide standard action buttons except the menu
+		frm.page.wrapper.find('.standard-actions .btn').not('.menu-btn-group .btn').hide();
+
+		// Hide the menu (...) button to prevent access to Delete, Duplicate, etc.
+		frm.page.wrapper.find('.menu-btn-group').hide();
+
+		// Also hide any remaining action buttons via jQuery
+		frm.page.wrapper.find('.page-actions .btn-default').hide();
+	}
+
+	// Remove inner toolbar buttons via jQuery (remove_inner_button may not exist)
+	if (frm.page && frm.page.inner_toolbar) {
+		frm.page.inner_toolbar.find('.btn').hide();
+	}
+}
 function calculate_trial_end_days() {
 	// try to check for trial_end_date in frappe.boot.subscription_conf
 	if (frappe.boot.quota.valid_till) {
@@ -81,7 +127,7 @@ $(document).ready(function () {
 		if (
 			!frappe.is_mobile() &&
 			trial_end_days > 0 &&
-            trial_end_days <= 30
+			trial_end_days <= 30
 		) {
 			// console.log('Displaying subscription renewal notification bar.');
 			$('.layout-main-section').before($floatingBar);
