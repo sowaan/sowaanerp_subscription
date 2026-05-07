@@ -10,3 +10,4 @@ def boot_session(bootinfo):
     bootinfo.quota = quota
     if quota is not None:
         quota.setdefault("restricted_doctypes", [])
+        quota.setdefault("allow_restricted_toggle", 1)

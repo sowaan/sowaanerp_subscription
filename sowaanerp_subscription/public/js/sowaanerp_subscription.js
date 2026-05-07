@@ -1,5 +1,26 @@
 const frappe_cloud_base_endpoint = 'https://frappecloud.com';
 const restrictedDoctypes = (frappe.boot && frappe.boot.quota && frappe.boot.quota.restricted_doctypes) || [];
+const restrictedToggleFields = ["enabled", "disabled", "is_disabled", "enable", "disable"];
+
+function getConfigFlag(value, defaultValue) {
+	if (value === undefined || value === null) {
+		return defaultValue;
+	}
+	if (typeof value === "string") {
+		const normalized = value.trim().toLowerCase();
+		if (normalized === "0" || normalized === "false" || normalized === "no") {
+			return false;
+		}
+		if (normalized === "1" || normalized === "true" || normalized === "yes") {
+			return true;
+		}
+	}
+	return Boolean(value);
+}
+
+function isRestrictedToggleAllowed() {
+	return getConfigFlag(frappe?.boot?.quota?.allow_restricted_toggle, true);
+}
 
 // Monkey-patch Form.prototype.refresh to apply restriction UI on every form render
 (function () {
@@ -20,40 +41,63 @@ function applyDoctypeRestrictionUI(frm) {
 		return;
 	}
 
-	// Disable save
-	frm.disable_save();
+	const allowToggle = isRestrictedToggleAllowed();
+	const toggleFields = allowToggle
+		? restrictedToggleFields.filter((fieldname) => frm.fields_dict && frm.fields_dict[fieldname])
+		: [];
+	setReadOnlyForRestrictedForm(frm, toggleFields);
 
-	// Clear primary action (Save/Submit/Amend button)
+	if (toggleFields.length) {
+		frm.enable_save();
+		applyRestrictionActionVisibility(frm, true);
+		return;
+	}
+
+	frm.disable_save();
 	if (frm.page && frm.page.clear_primary_action) {
 		frm.page.clear_primary_action();
 	}
+	applyRestrictionActionVisibility(frm, false);
+}
 
-	// Override set_primary_action to prevent Save button from being re-added by toolbar refresh
-	if (frm.page && !frm.page.__restriction_applied) {
-		frm.page.__restriction_applied = true;
-		frm.page.set_primary_action = function () { return; };
+function setReadOnlyForRestrictedForm(frm, toggleFields) {
+	const allowedFields = new Set(toggleFields);
+	const fields = (frm.meta && frm.meta.fields) || [];
+	fields.forEach((df) => {
+		if (!df.fieldname) {
+			return;
+		}
+		const readOnly = allowedFields.has(df.fieldname) ? (df.read_only || 0) : 1;
+		frm.set_df_property(df.fieldname, "read_only", readOnly);
+	});
+	frm.refresh_fields();
+}
+
+function applyRestrictionActionVisibility(frm, allowPrimary) {
+	if (!frm.page || !frm.page.wrapper) {
+		return;
 	}
 
-	if (frm.page && frm.page.wrapper) {
-		// Hide primary and secondary action buttons (Save, Submit, etc.)
-		frm.page.wrapper.find('.primary-action, .btn-primary-dark, .btn-primary, .btn-secondary').hide();
-
-		// Hide all custom action buttons (e.g., "Go to Customer", "Add script for Child Table", etc.)
-		frm.page.wrapper.find('.custom-actions .btn, .custom-btn-group .btn').hide();
-		frm.page.wrapper.find('.custom-actions').hide();
-
-		// Hide standard action buttons except the menu
-		frm.page.wrapper.find('.standard-actions .btn').not('.menu-btn-group .btn').hide();
-
-		// Hide the menu (...) button to prevent access to Delete, Duplicate, etc.
-		frm.page.wrapper.find('.menu-btn-group').hide();
-
-		// Also hide any remaining action buttons via jQuery
-		frm.page.wrapper.find('.page-actions .btn-default').hide();
+	const wrapper = frm.page.wrapper;
+	if (!allowPrimary) {
+		wrapper.find('.primary-action, .btn-primary-dark, .btn-primary, .btn-secondary').hide();
+	} else {
+		wrapper.find('.primary-action, .btn-primary-dark, .btn-primary').show();
+		wrapper.find('.btn-secondary').hide();
 	}
 
-	// Remove inner toolbar buttons via jQuery (remove_inner_button may not exist)
-	if (frm.page && frm.page.inner_toolbar) {
+	wrapper.find('.custom-actions .btn, .custom-btn-group .btn').hide();
+	wrapper.find('.custom-actions').hide();
+	const standardButtons = wrapper.find('.standard-actions .btn').not('.menu-btn-group .btn');
+	if (allowPrimary) {
+		standardButtons.not('.primary-action, .btn-primary-dark, .btn-primary').hide();
+	} else {
+		standardButtons.hide();
+	}
+	wrapper.find('.menu-btn-group').hide();
+	wrapper.find('.page-actions .btn-default').hide();
+
+	if (frm.page.inner_toolbar) {
 		frm.page.inner_toolbar.find('.btn').hide();
 	}
 }

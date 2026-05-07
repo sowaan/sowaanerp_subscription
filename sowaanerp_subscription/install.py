@@ -15,10 +15,15 @@ DEFAULT_RESTRICTED_DOCTYPES = [
 def ensure_restricted_doctypes_config():
     site_config = frappe.get_site_config()
     quota = site_config.get("quota") or {}
-    if "restricted_doctypes" in quota:
-        return
-    quota["restricted_doctypes"] = DEFAULT_RESTRICTED_DOCTYPES
-    update_site_config("quota", quota)
+    updated = False
+    if "restricted_doctypes" not in quota:
+        quota["restricted_doctypes"] = DEFAULT_RESTRICTED_DOCTYPES
+        updated = True
+    if "allow_restricted_toggle" not in quota:
+        quota["allow_restricted_toggle"] = 1
+        updated = True
+    if updated:
+        update_site_config("quota", quota)
 
 
 def after_migrate():
@@ -65,7 +70,8 @@ def before_install():
             'Purchase Invoice': {'limit': 10, 'period': 'Weekly'},
             'Journal Entry': {'limit': 10, 'period': 'Monthly'},
             'Payment Entry': {'limit': 10, 'period': 'Monthly'}
-        }
+        },
+        'allow_restricted_toggle': 1
     }
 
     # Updating site config
