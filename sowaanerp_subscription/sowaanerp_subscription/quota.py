@@ -131,7 +131,9 @@ def validate_db_space_limit():
     Validates DB space limit
     '''
     # Site config
-    quota = frappe.get_site_config()['quota']
+    quota = frappe.get_site_config().get('quota')
+    if not quota:
+       return
     allowed_db_space = quota["db_space"]
 
     # allowed DB space value type check
