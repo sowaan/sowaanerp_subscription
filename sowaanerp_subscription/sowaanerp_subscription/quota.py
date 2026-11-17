@@ -122,8 +122,29 @@ def validate_files_space_limit():
 
 
 # DB
+# Measuring the database size reads information_schema, which is slow on a server with many tables,
+# and this runs on every submit of every doctype. So the measured size is cached per site and only
+# re-measured when the cache expires; the limit check itself just compares against the cached value.
+DB_SPACE_CACHE_KEY = "sowaanerp_subscription:used_db_space"
+DB_SPACE_CACHE_SECONDS = 30 * 60
+
+
 def db_space_limit(self, method):
     validate_db_space_limit()
+
+
+def get_used_db_space():
+    '''
+    Returns this site's database size in MB (cached for DB_SPACE_CACHE_SECONDS)
+    '''
+    cache = frappe.cache() if callable(frappe.cache) else frappe.cache
+    used_db_space = cache.get_value(DB_SPACE_CACHE_KEY)
+    if used_db_space is None:
+        # Only this site's own database (DATABASE()), never the whole server
+        result = frappe.db.sql('''SELECT SUM(`data_length` + `index_length`) / 1024 / 1024 FROM information_schema.tables WHERE `table_schema` = DATABASE()''')
+        used_db_space = int(result[0][0] or 0)
+        cache.set_value(DB_SPACE_CACHE_KEY, used_db_space, expires_in_sec=DB_SPACE_CACHE_SECONDS)
+    return used_db_space
 
 
 def validate_db_space_limit():
@@ -134,20 +155,22 @@ def validate_db_space_limit():
     quota = frappe.get_site_config().get('quota')
     if not quota:
        return
-    allowed_db_space = quota["db_space"]
+    allowed_db_space = quota.get("db_space")
+    if allowed_db_space is None:
+        return
 
     # allowed DB space value type check
     if type(allowed_db_space) is not int:
         frappe.throw(_("Invalid value for maximum Database Space limit. it can be a whole number only."), frappe.ValidationError)
 
     # Getting DB Space
-    used_db_space = frappe.db.sql('''SELECT `table_schema` as `database_name`, SUM(`data_length` + `index_length`) / 1024 / 1024 AS `database_size` FROM information_schema.tables  GROUP BY `table_schema`''')[1][1]
-    used_db_space = int(used_db_space)
+    used_db_space = get_used_db_space()
 
-    # Updating quota config
-    quota['used_db_space'] = used_db_space
-
-    update_site_config('quota', quota)
+    # Updating quota config, only when the value actually changed (a file write on every submit
+    # is slow and races between gunicorn workers)
+    if quota.get('used_db_space') != used_db_space:
+        quota['used_db_space'] = used_db_space
+        update_site_config('quota', quota)
 
     if allowed_db_space != 0 and used_db_space > allowed_db_space:
         msg = '''
